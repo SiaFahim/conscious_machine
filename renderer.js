@@ -14,7 +14,7 @@ class DiagramRenderer {
 
     init() {
         // Use SVG viewBox for automatic centering and scaling — no pixel-coordinate offsets needed
-        this.svg.setAttribute('viewBox', '-520 -270 1040 530');
+        this.svg.setAttribute('viewBox', '-546 -279 1092 557');
         this.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         this.cx = 0;
         this.cy = 0;
