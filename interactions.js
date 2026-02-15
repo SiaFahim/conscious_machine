@@ -204,6 +204,7 @@ class InteractionManager {
         this.theoryOpen = false;
         const overlay = document.getElementById('theory-overlay');
         const trigger = document.getElementById('title-trigger');
+        const theoryLink = document.getElementById('theory-link');
         const closeBtn = document.getElementById('theory-close');
         const backdrop = overlay.querySelector('.theory-backdrop');
         const content = overlay.querySelector('.theory-content');
@@ -211,11 +212,15 @@ class InteractionManager {
         // Populate content once
         content.innerHTML = this.getTheoryHTML();
 
-        trigger.addEventListener('click', () => {
+        const openTheory = (e) => {
+            e.preventDefault();
             this.theoryOpen = true;
             overlay.classList.remove('theory-hidden');
             overlay.classList.add('theory-visible');
-        });
+        };
+
+        trigger.addEventListener('click', openTheory);
+        theoryLink.addEventListener('click', openTheory);
 
         closeBtn.addEventListener('click', () => this.closeTheory());
         backdrop.addEventListener('click', () => this.closeTheory());
