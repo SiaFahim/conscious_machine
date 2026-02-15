@@ -228,7 +228,7 @@ const COMPONENTS = {
         id: 'reward', label: 'Reward Signal', sublabel: 'Distributed RL Update',
         category: 'feedback', color: '#22c55e', icon: '✓', zone: 'decomposition',
         x: -360, y: 120, size: 34,
-        description: 'Compares the expectation vector (predicted outcome) with the actual sensory observation after action execution. The reward signal is then DISTRIBUTED to all models in the decision-and-action pipeline — motor reasoning, action planner, motor decomposition, and principles — weighted by their degree of involvement. Models closer to the action receive stronger updates. The sensory pipeline (transformers, abstraction, world model) is NOT updated by reward — those models learn through their own self-supervised objectives on incoming sensory data, not from action outcomes.',
+        description: 'Compares the expectation vector (predicted outcome) with the actual sensory observation after action execution. The reward signal is DISTRIBUTED to all models in the decision-and-action pipeline — motor reasoning, action planner, motor decomposition, and principles — as well as ego zone models: survival drives, linguistic model, and goal formation. Principles receive the strongest update as core behavioral guardrails. The sensory pipeline (transformers, abstraction, world model) is NOT updated by reward — those models learn through their own self-supervised objectives on incoming sensory data, not from action outcomes.',
         models: ['Expectation Comparator', 'Reward Calculator', 'Surprise Detector', 'Credit Assignment Network', 'Distributed RL Update Module'],
         hardware: 'Low-latency comparison circuits. Dedicated RL accelerator hardware. Broadcast bus for parallel gradient distribution.',
         processes: ['Compare', 'Calculate Reward', 'Assign Credit', 'Distribute Updates']
@@ -277,15 +277,17 @@ const CONNECTIONS = [
     // Linguistic model → Speech (direct connection for language-driven speech)
     { from: 'llm', to: 'm_speech', label: 'Linguistic Output', color: '#fbbf24', strength: 2 },
 
-    // Reward feedback loop — inputs
+    // Reward feedback loop — input
     { from: 'action_planner', to: 'reward', label: 'Expectation Vec', color: '#fb923c', strength: 2 },
-    { from: 'world_model', to: 'reward', label: 'Actual Outcome', color: '#4ade80', strength: 2 },
 
-    // Distributed reward signal — updates decision-and-action pipeline models
-    { from: 'reward', to: 'principles', label: 'RL Update', color: '#22c55e', strength: 3 },
-    { from: 'reward', to: 'motor_decomp', label: 'Motor RL', color: '#22c55e', strength: 2 },
-    { from: 'reward', to: 'action_planner', label: 'Planner RL', color: '#22c55e', strength: 2 },
-    { from: 'reward', to: 'motor_reasoning', label: 'Reasoning RL', color: '#22c55e', strength: 2 },
+    // Distributed reward signal — updates decision-and-action pipeline + ego zone models
+    { from: 'reward', to: 'principles', label: 'RL Update', color: '#2d9a56', strength: 2 },
+    { from: 'reward', to: 'motor_decomp', label: 'Motor RL', color: '#2d9a56', strength: 1 },
+    { from: 'reward', to: 'action_planner', label: 'Planner RL', color: '#2d9a56', strength: 1 },
+    { from: 'reward', to: 'motor_reasoning', label: 'Reasoning RL', color: '#2d9a56', strength: 1 },
+    { from: 'reward', to: 'survival_drives', label: 'Drive RL', color: '#2d9a56', strength: 1 },
+    { from: 'reward', to: 'llm', label: 'Linguistic RL', color: '#2d9a56', strength: 1 },
+    { from: 'reward', to: 'goal_formation', label: 'Goal RL', color: '#2d9a56', strength: 1 },
 
     // Principles feedback to Goal Formation
     { from: 'principles', to: 'goal_formation', label: 'Value Constraints', color: '#f472b6', strength: 1 },

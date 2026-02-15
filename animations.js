@@ -15,6 +15,10 @@ class FlowAnimator {
         this.pulseTime = 0;
         // Full cycle duration in ms (~4 seconds per pulse wave)
         this.cycleDuration = 4000;
+        // Overlapping pulses — two waves offset so the second starts
+        // while the first is still in the motor section
+        this.numPulseWaves = 2;
+        this.waveSpacing = 0.65; // second wave starts at 65% through the cycle
     }
 
     // ── Pipeline stage classification ──
@@ -57,11 +61,12 @@ class FlowAnimator {
         // Stage 8: Reward feedback loop — inputs (phase 0.85–0.90)
         if (to === 'reward') return { stage: 'reward_in', phase: 0.85, speed: 0.9 };
 
-        // Stage 9: Distributed reward — outputs to decision-and-action pipeline (phase 0.90–0.96)
+        // Stage 9: Distributed reward — outputs to pipeline + ego zone (phase 0.90–0.97)
         if (from === 'reward') {
             const rewardPhases = {
-                'principles': 0.90, 'motor_decomp': 0.92,
-                'action_planner': 0.94, 'motor_reasoning': 0.96,
+                'principles': 0.90, 'motor_decomp': 0.91,
+                'action_planner': 0.92, 'motor_reasoning': 0.93,
+                'survival_drives': 0.94, 'llm': 0.95, 'goal_formation': 0.96,
             };
             return { stage: 'reward_out', phase: rewardPhases[to] || 0.92, speed: 0.9 };
         }
@@ -99,13 +104,17 @@ class FlowAnimator {
         this.clearParticles();
         this.renderer.connectionPaths.forEach(cp => {
             const count = Math.max(1, Math.ceil(cp.data.strength * 0.8));
-            for (let i = 0; i < count; i++) {
-                this.createParticle(cp, i, count);
+            // Spawn particles for each overlapping pulse wave
+            for (let wave = 0; wave < this.numPulseWaves; wave++) {
+                const waveOffset = wave * this.waveSpacing;
+                for (let i = 0; i < count; i++) {
+                    this.createParticle(cp, i, count, waveOffset);
+                }
             }
         });
     }
 
-    createParticle(connectionPath, particleIndex, totalInGroup) {
+    createParticle(connectionPath, particleIndex, totalInGroup, waveOffset = 0) {
         const pathEl = connectionPath.element;
         const totalLength = pathEl.getTotalLength();
         if (totalLength === 0) return;
@@ -132,7 +141,7 @@ class FlowAnimator {
             connectionIndex: connectionPath.index,
             // Pulse-wave properties
             stage: classification.stage,
-            phaseOffset: classification.phase + groupSpread,
+            phaseOffset: (classification.phase + groupSpread + waveOffset) % 1.0,
             speedMult: classification.speed,
             strength: connectionPath.data.strength,
         };

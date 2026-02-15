@@ -12,6 +12,7 @@ class InteractionManager {
 
     init() {
         this.bindComponentClicks();
+        this.bindConnectionHovers();
         this.bindPanelClose();
         this.bindFidelitySlider();
         this.bindFooterButtons();
@@ -44,6 +45,26 @@ class InteractionManager {
             if (this.selectedId) this.deselectComponent();
         });
     }
+
+    bindConnectionHovers() {
+        this.renderer.connectionPaths.forEach(cp => {
+            const hitEl = cp.hitElement;
+            const pathEl = cp.element;
+            hitEl.addEventListener('mouseenter', (e) => {
+                if (this.selectedId) return;
+                this.tooltip.textContent = cp.data.label;
+                this.tooltip.classList.add('visible');
+                pathEl.style.opacity = '0.85';
+                this.updateTooltipPosition(e);
+            });
+            hitEl.addEventListener('mousemove', (e) => this.updateTooltipPosition(e));
+            hitEl.addEventListener('mouseleave', () => {
+                this.tooltip.classList.remove('visible');
+                pathEl.style.opacity = '';
+            });
+        });
+    }
+
 
     updateTooltipPosition(e) {
         const container = document.getElementById('canvas-container').getBoundingClientRect();

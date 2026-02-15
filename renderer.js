@@ -13,7 +13,11 @@ class DiagramRenderer {
     }
 
     init() {
-        this.updateCenter();
+        // Use SVG viewBox for automatic centering and scaling — no pixel-coordinate offsets needed
+        this.svg.setAttribute('viewBox', '-520 -270 1040 530');
+        this.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        this.cx = 0;
+        this.cy = 0;
         this.createDefs();
         this.computePositions();
         this.renderZoneBackgrounds();
@@ -22,13 +26,6 @@ class DiagramRenderer {
         this.renderConnections();
         this.renderComponents();
         this.renderZoneLabels();
-        window.addEventListener('resize', () => { this.updateCenter(); this.rerender(); });
-    }
-
-    updateCenter() {
-        const rect = this.svg.getBoundingClientRect();
-        this.cx = rect.width / 2;
-        this.cy = rect.height / 2;
     }
 
     createDefs() {
@@ -199,7 +196,16 @@ class DiagramRenderer {
             });
             pathEl.setAttribute('filter', 'url(#glow)');
             layer.appendChild(pathEl);
-            this.connectionPaths.push({ element: pathEl, data: conn, index: i });
+
+            // Invisible wider hit area for hover detection
+            const hitPath = this.createSVG('path', {
+                d: path, class: 'connection-hit',
+                stroke: 'transparent', 'stroke-width': 12, fill: 'none',
+                'data-label': conn.label, 'data-color': conn.color, 'data-index': i
+            });
+            layer.appendChild(hitPath);
+
+            this.connectionPaths.push({ element: pathEl, hitElement: hitPath, data: conn, index: i });
 
             // Flow label — only shown when toggled on
             const totalLen = pathEl.getTotalLength();
