@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conscious Machine — Theoretical Architecture</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-left">
+                <h1>Conscious Machine</h1>
+                <span class="subtitle">Theoretical Architecture for Artificial Consciousness</span>
+            </div>
+            <div class="header-right">
+                <div class="fidelity-control">
+                    <label>Sensory Fidelity</label>
+                    <div class="fidelity-bar">
+                        <div class="fidelity-fill" id="fidelityFill"></div>
+                        <input type="range" id="fidelitySlider" min="0" max="100" value="15">
+                    </div>
+                    <span class="fidelity-label" id="fidelityLabel">15% — Early Stage</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Canvas -->
+        <main id="main">
+            <div id="canvas-container">
+                <svg id="diagram" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Gradients and filters will be injected by renderer -->
+                    </defs>
+                    <g id="connections-layer"></g>
+                    <g id="particles-layer"></g>
+                    <g id="components-layer"></g>
+                    <g id="labels-layer"></g>
+                </svg>
+                <div id="center-pulse"></div>
+            </div>
+
+            <!-- Detail Panel -->
+            <aside id="detail-panel" class="panel-hidden">
+                <button id="panel-close" aria-label="Close panel">&times;</button>
+                <div id="panel-content">
+                    <div class="panel-header">
+                        <div class="panel-icon" id="panelIcon"></div>
+                        <h2 id="panelTitle">Select a Component</h2>
+                        <span class="panel-category" id="panelCategory"></span>
+                    </div>
+                    <p class="panel-description" id="panelDescription"></p>
+                    <div class="panel-section" id="panelModels">
+                        <h3>Specialized ML Models</h3>
+                        <ul id="panelModelList"></ul>
+                    </div>
+                    <div class="panel-section" id="panelProcesses">
+                        <h3>Processing Pipeline</h3>
+                        <div id="panelProcessFlow"></div>
+                    </div>
+                    <div class="panel-section" id="panelConnections">
+                        <h3>Connected To</h3>
+                        <div id="panelConnectionList"></div>
+                    </div>
+                    <div class="panel-section" id="panelHardware">
+                        <h3>Hardware Considerations</h3>
+                        <p id="panelHardwareText"></p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Bottom Info Bar -->
+        <footer id="footer">
+            <div class="footer-left">
+                <span class="hw-badge current">Current: GPU/TPU Clusters</span>
+                <span class="hw-badge future">Future: Neuromorphic Chips</span>
+                <span class="hw-badge future">Future: Memristors</span>
+            </div>
+            <div class="footer-center">
+                <span class="status-indicator"></span>
+                <span>Click any component to explore • Scroll to zoom • Drag to pan</span>
+            </div>
+            <div class="footer-right">
+                <button id="toggleFlow" class="footer-btn active">Flow Animation</button>
+                <button id="toggleLabels" class="footer-btn">Flow Labels</button>
+                <button id="resetView" class="footer-btn">Reset View</button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="renderer.js"></script>
+    <script src="animations.js"></script>
+    <script src="interactions.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
