@@ -65,7 +65,6 @@ body {
     backdrop-filter: blur(12px);
     border-radius: 8px;
     border: 1px solid rgba(99, 102, 241, 0.15);
-    pointer-events: none;
 }
 
 #floating-title h1 {
@@ -558,4 +557,247 @@ body {
 
 .component-group.selected .component-ring {
     animation: selectedGlow 2s ease-in-out infinite;
+}
+
+/* === Theory Overlay === */
+#theory-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+#theory-overlay.theory-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#theory-overlay.theory-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+}
+
+.theory-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 4, 12, 0.88);
+    backdrop-filter: blur(20px);
+}
+
+.theory-container {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 80px 40px 100px;
+    transform: translateY(-40px);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#theory-overlay.theory-hidden .theory-container {
+    transform: translateY(-40px);
+}
+
+#theory-overlay.theory-visible .theory-container {
+    transform: translateY(0);
+}
+
+#theory-close {
+    position: fixed;
+    top: 20px;
+    right: 28px;
+    width: 40px;
+    height: 40px;
+    background: rgba(30, 30, 60, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: var(--text-secondary);
+    font-size: 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 102;
+}
+
+#theory-close:hover {
+    background: rgba(60, 60, 100, 0.8);
+    color: var(--text-primary);
+    border-color: var(--accent-core);
+}
+
+/* Title trigger */
+#title-trigger {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+#title-trigger:hover {
+    opacity: 0.75;
+}
+
+#floating-title {
+    pointer-events: auto;
+}
+
+/* Theory blog-post typography */
+.theory-content {
+    --font-serif: 'Crimson Pro', 'Georgia', serif;
+    --font-display: 'Playfair Display', 'Georgia', serif;
+    color: #d0d0e0;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    line-height: 1.78;
+    font-weight: 300;
+}
+
+.theory-content h1 {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #e8e8f0, #a0a0c0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+}
+
+.theory-content .theory-subtitle {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-style: italic;
+    color: #7878a0;
+    font-weight: 300;
+    margin-bottom: 48px;
+    display: block;
+}
+
+.theory-content .theory-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #6366f1, transparent);
+    margin: 48px auto;
+    border: none;
+}
+
+.theory-content h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    color: #e0e0f0;
+    margin-top: 56px;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.theory-content h3 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    color: #c8c8e0;
+    margin-top: 36px;
+    margin-bottom: 14px;
+}
+
+.theory-content p {
+    margin-bottom: 22px;
+}
+
+.theory-content em {
+    font-style: italic;
+    color: #b8b8d8;
+}
+
+.theory-content strong {
+    font-weight: 600;
+    color: #e8e8f8;
+}
+
+.theory-content .accent {
+    color: #818cf8;
+    font-weight: 500;
+}
+
+.theory-content .highlight-box {
+    background: rgba(99, 102, 241, 0.06);
+    border-left: 3px solid #6366f1;
+    padding: 20px 24px;
+    margin: 32px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 17px;
+}
+
+.theory-content .highlight-box p:last-child {
+    margin-bottom: 0;
+}
+
+.theory-content ul,
+.theory-content ol {
+    margin-bottom: 22px;
+    padding-left: 24px;
+}
+
+.theory-content li {
+    margin-bottom: 8px;
+}
+
+.theory-content .gap-item {
+    background: rgba(239, 68, 68, 0.06);
+    border-left: 3px solid #ef4444;
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 17px;
+}
+
+.theory-content .gap-item strong {
+    color: #fca5a5;
+}
+
+.theory-content .impl-item {
+    background: rgba(34, 197, 94, 0.06);
+    border-left: 3px solid #22c55e;
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 17px;
+}
+
+.theory-content .impl-item strong {
+    color: #86efac;
+}
+
+.theory-content .closing {
+    text-align: center;
+    font-style: italic;
+    color: #8888aa;
+    margin-top: 56px;
+    font-size: 17px;
+}
+
+/* Theory scrollbar */
+.theory-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.theory-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.theory-container::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.25);
+    border-radius: 3px;
+}
+
+.theory-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.45);
 }

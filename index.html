@@ -7,8 +7,9 @@
     <title>Conscious Machine — Theoretical Architecture</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap"
         rel="stylesheet">
 </head>
 
@@ -28,10 +29,19 @@
             <div id="center-pulse"></div>
         </div>
 
-        <!-- Floating Title (top-left) -->
+        <!-- Floating Title (top-left, clickable) -->
         <div id="floating-title">
-            <h1>Conscious Machine</h1>
+            <h1 id="title-trigger">Conscious Machine</h1>
             <span class="subtitle">Theoretical Architecture for Artificial Consciousness</span>
+        </div>
+
+        <!-- Theory Overlay -->
+        <div id="theory-overlay" class="theory-hidden">
+            <div class="theory-backdrop"></div>
+            <div class="theory-container">
+                <button id="theory-close" aria-label="Close theory">&times;</button>
+                <article class="theory-content"></article>
+            </div>
         </div>
 
         <!-- Floating Fidelity Control (top-right) -->
