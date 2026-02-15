@@ -228,7 +228,7 @@ const COMPONENTS = {
         id: 'reward', label: 'Reward Signal', sublabel: 'Distributed RL Update',
         category: 'feedback', color: '#22c55e', icon: '✓', zone: 'decomposition',
         x: -360, y: 120, size: 34,
-        description: 'Compares the expectation vector (predicted outcome) with the actual sensory observation after action execution. The reward signal is then DISTRIBUTED to ALL models that were involved in the action, weighted by their degree of involvement. Domain transformers, abstraction, world model, motor reasoning, action planner, motor decomposition, and principles all receive gradient updates proportional to their contribution. This distributed credit assignment enables every stage of the pipeline to learn from outcomes, not just the policy layer.',
+        description: 'Compares the expectation vector (predicted outcome) with the actual sensory observation after action execution. The reward signal is then DISTRIBUTED to all models in the decision-and-action pipeline — motor reasoning, action planner, motor decomposition, and principles — weighted by their degree of involvement. Models closer to the action receive stronger updates. The sensory pipeline (transformers, abstraction, world model) is NOT updated by reward — those models learn through their own self-supervised objectives on incoming sensory data, not from action outcomes.',
         models: ['Expectation Comparator', 'Reward Calculator', 'Surprise Detector', 'Credit Assignment Network', 'Distributed RL Update Module'],
         hardware: 'Low-latency comparison circuits. Dedicated RL accelerator hardware. Broadcast bus for parallel gradient distribution.',
         processes: ['Compare', 'Calculate Reward', 'Assign Credit', 'Distribute Updates']
@@ -281,16 +281,11 @@ const CONNECTIONS = [
     { from: 'action_planner', to: 'reward', label: 'Expectation Vec', color: '#fb923c', strength: 2 },
     { from: 'world_model', to: 'reward', label: 'Actual Outcome', color: '#4ade80', strength: 2 },
 
-    // Distributed reward signal — updates ALL involved models based on contribution
+    // Distributed reward signal — updates decision-and-action pipeline models
     { from: 'reward', to: 'principles', label: 'RL Update', color: '#22c55e', strength: 3 },
     { from: 'reward', to: 'motor_decomp', label: 'Motor RL', color: '#22c55e', strength: 2 },
     { from: 'reward', to: 'action_planner', label: 'Planner RL', color: '#22c55e', strength: 2 },
     { from: 'reward', to: 'motor_reasoning', label: 'Reasoning RL', color: '#22c55e', strength: 2 },
-    { from: 'reward', to: 'world_model', label: 'World Model RL', color: '#22c55e', strength: 1 },
-    { from: 'reward', to: 'abstraction', label: 'Abstraction RL', color: '#22c55e', strength: 1 },
-    { from: 'reward', to: 'tf_vision', label: 'Vision RL', color: '#22c55e', strength: 1 },
-    { from: 'reward', to: 'tf_audio', label: 'Audio RL', color: '#22c55e', strength: 1 },
-    { from: 'reward', to: 'tf_somato', label: 'Somato RL', color: '#22c55e', strength: 1 },
 
     // Principles feedback to Goal Formation
     { from: 'principles', to: 'goal_formation', label: 'Value Constraints', color: '#f472b6', strength: 1 },

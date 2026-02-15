@@ -80,7 +80,7 @@ Once the ego zone produces a goal, the motor pipeline executes it:
 1. **Motor Reasoning** — Receives the goal vector, a copy of the world model, and current principles. Reasons about feasibility and constraints.
 2. **Action Planner** — Plans the sequence of actions. Generates an *expectation vector* — a prediction of what should happen.
 3. **Motor Decomposition** — Breaks high-level plans into specific commands for individual body parts.
-4. **Execution** — Actuators (servos, tendons), Locomotion (gait, balance), Speech (vocalization).
+4. **Execution** — Actuators (servos, tendons — locomotion emerges from coordinated actuator activation), Speech (vocalization, with direct input from the Linguistic Model).
 
 ### 6. Reward & Learning Loop
 
@@ -88,10 +88,10 @@ After every action:
 
 1. The **Action Planner's expectation vector** is compared against the **World Model's actual observation**
 2. Match → positive reward. Exceed → amplified reward. Fall short → negative reward.
-3. The reward signal updates **Principles** via reinforcement learning
+3. The reward signal is **distributed to all models in the decision-and-action pipeline** — Motor Reasoning, Action Planner, Motor Decomposition, and Principles — weighted by their degree of involvement. Models closer to the action receive stronger gradient updates.
 4. Updated principles feed back into **Goal Formation**, closing the loop
 
-This creates continuous self-improvement without explicit programming of what "good" behavior looks like.
+The sensory pipeline (transformers, abstraction, world model) is **not** updated by reward — those models learn through their own self-supervised objectives on incoming sensory data, not from action outcomes. This separation keeps perception objective and action adaptive.
 
 ---
 
@@ -116,7 +116,7 @@ This creates continuous self-improvement without explicit programming of what "g
 
 - **Right side** — Sensory pipeline: 5 raw sensors → 3 domain transformers → cross-modal abstraction
 - **Center** — Ego zone: world model, linguistic model, goal formation, survival drives, principles, self core — enclosed in a dashed ellipse boundary
-- **Left side** — Motor pipeline: motor reasoning → action planning → motor decomposition → actuators / locomotion / speech
+- **Left side** — Motor pipeline: motor reasoning → action planning → motor decomposition → actuators / speech
 - **Feedback loop** — Reward signal compares expectation vs actual outcome, updates principles via RL
 
 ### Interactions

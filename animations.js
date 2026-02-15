@@ -57,13 +57,11 @@ class FlowAnimator {
         // Stage 8: Reward feedback loop — inputs (phase 0.85–0.90)
         if (to === 'reward') return { stage: 'reward_in', phase: 0.85, speed: 0.9 };
 
-        // Stage 9: Distributed reward — outputs to all involved models (phase 0.90–0.98)
+        // Stage 9: Distributed reward — outputs to decision-and-action pipeline (phase 0.90–0.96)
         if (from === 'reward') {
-            // Stagger the reward distribution: nearby models get it first, distant ones later
             const rewardPhases = {
-                'principles': 0.90, 'motor_decomp': 0.91, 'action_planner': 0.92,
-                'motor_reasoning': 0.93, 'world_model': 0.94,
-                'abstraction': 0.95, 'tf_vision': 0.96, 'tf_audio': 0.96, 'tf_somato': 0.96,
+                'principles': 0.90, 'motor_decomp': 0.92,
+                'action_planner': 0.94, 'motor_reasoning': 0.96,
             };
             return { stage: 'reward_out', phase: rewardPhases[to] || 0.92, speed: 0.9 };
         }
