@@ -155,7 +155,7 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    cursor: grab;
+    cursor: default;
     background:
         radial-gradient(ellipse at center, #0c0c2008 0%, transparent 70%),
         linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
@@ -163,13 +163,11 @@ body {
     background-size: 100% 100%, 40px 40px, 40px 40px;
 }
 
-#canvas-container:active {
-    cursor: grabbing;
-}
-
 #diagram {
     width: 100%;
     height: 100%;
+    transform: scale(1.3);
+    transform-origin: center center;
 }
 
 #center-pulse {

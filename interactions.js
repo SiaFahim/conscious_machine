@@ -7,19 +7,15 @@ class InteractionManager {
         this.selectedId = null;
         this.panel = document.getElementById('detail-panel');
         this.tooltip = null;
-        this.panState = { dragging: false, startX: 0, startY: 0, tx: 0, ty: 0, scale: 1.3 };
         this.createTooltip();
     }
 
     init() {
         this.bindComponentClicks();
         this.bindPanelClose();
-        this.bindPanZoom();
         this.bindFidelitySlider();
         this.bindFooterButtons();
         this.bindKeyboard();
-        // Apply default zoom on load
-        this.applyTransform();
     }
 
     createTooltip() {
@@ -139,47 +135,6 @@ class InteractionManager {
         document.getElementById('panel-close').addEventListener('click', () => this.deselectComponent());
     }
 
-    bindPanZoom() {
-        const container = document.getElementById('canvas-container');
-        const state = this.panState;
-        let targetScale = state.scale;
-        let animating = false;
-        const smoothZoom = () => {
-            const diff = targetScale - state.scale;
-            if (Math.abs(diff) < 0.0005) { state.scale = targetScale; animating = false; }
-            else { state.scale += diff * 0.08; animating = true; }
-            this.applyTransform();
-            if (animating) requestAnimationFrame(smoothZoom);
-        };
-        container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.997 : 1.003;
-            targetScale = Math.max(0.5, Math.min(2.5, targetScale * delta));
-            if (!animating) { animating = true; smoothZoom(); }
-        }, { passive: false });
-        container.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.component-group')) return;
-            state.dragging = true;
-            state.startX = e.clientX - state.tx;
-            state.startY = e.clientY - state.ty;
-        });
-        window.addEventListener('mousemove', (e) => {
-            if (!state.dragging) return;
-            state.tx = e.clientX - state.startX;
-            state.ty = e.clientY - state.startY;
-            this.applyTransform();
-        });
-        window.addEventListener('mouseup', () => { state.dragging = false; });
-    }
-
-    applyTransform() {
-        const layers = ['#connections-layer', '#particles-layer', '#components-layer', '#labels-layer'];
-        layers.forEach(sel => {
-            const el = this.renderer.svg.querySelector(sel);
-            el.setAttribute('transform', `translate(${this.panState.tx},${this.panState.ty}) scale(${this.panState.scale})`);
-        });
-    }
-
     bindFidelitySlider() {
         const slider = document.getElementById('fidelitySlider');
         const fill = document.getElementById('fidelityFill');
@@ -211,13 +166,6 @@ class InteractionManager {
         document.getElementById('toggleLabels').addEventListener('click', (e) => {
             const visible = this.renderer.toggleFlowLabels();
             e.target.classList.toggle('active', visible);
-        });
-        document.getElementById('resetView').addEventListener('click', () => {
-            this.panState.tx = 0;
-            this.panState.ty = 0;
-            this.panState.scale = 1.3;
-            this.applyTransform();
-            this.deselectComponent();
         });
     }
 
