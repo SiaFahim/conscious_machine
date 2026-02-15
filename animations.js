@@ -1,4 +1,7 @@
 // === Conscious Machine — Animations ===
+// Synchronized pulse-wave particle flow through the pipeline.
+// Sensors fire together → converge through transformers → land at ego zone →
+// exit as motor signals (synchronized, then diverge) → reward loops back.
 
 class FlowAnimator {
     constructor(renderer) {
@@ -7,9 +10,65 @@ class FlowAnimator {
         this.running = true;
         this.animationId = null;
         this.particleLayer = document.querySelector('#particles-layer');
+
+        // Global pulse clock — drives the synchronized wave
+        this.pulseTime = 0;
+        // Full cycle duration in ms (~4 seconds per pulse wave)
+        this.cycleDuration = 4000;
+    }
+
+    // ── Pipeline stage classification ──
+    // Each connection is assigned a stage with a phase offset (0–1) within the cycle.
+    // Connections in the same stage fire at the same phase; later stages fire later.
+    classifyConnection(conn) {
+        const from = conn.from;
+        const to = conn.to;
+
+        // Stage 0: Raw sensors → Domain transformers (phase 0.0–0.15)
+        if (from.startsWith('s_')) return { stage: 'sensor', phase: 0.0, speed: 1.0 };
+
+        // Stage 1: Transformers → Abstraction (phase 0.15–0.30)
+        if (from.startsWith('tf_') && to === 'abstraction') return { stage: 'transform', phase: 0.15, speed: 0.95 };
+
+        // Stage 2: Abstraction → World model (phase 0.30–0.42)
+        if (from === 'abstraction') return { stage: 'abstract', phase: 0.30, speed: 1.0 };
+
+        // Stage 3: Inside ego zone (phase 0.38–0.55) — slightly overlapping, internal processing
+        if (this.isEgoInternal(from, to)) return { stage: 'ego', phase: 0.38, speed: 0.8 };
+
+        // Stage 4: Ego → Motor reasoning (phase 0.55–0.65)
+        if (to === 'motor_reasoning') return { stage: 'ego_out', phase: 0.55, speed: 1.0 };
+
+        // Stage 5: Motor reasoning → Action planner (phase 0.62–0.72)
+        if (from === 'motor_reasoning') return { stage: 'motor_plan', phase: 0.62, speed: 1.0 };
+
+        // Stage 6: Action planner → Motor decomp (phase 0.70–0.80)
+        if (from === 'action_planner' && to === 'motor_decomp') return { stage: 'motor_decomp', phase: 0.70, speed: 1.0 };
+
+        // Stage 7: Motor decomp → Actuators/Locomotion/Speech (phase 0.78–0.90, diverging)
+        if (from === 'motor_decomp') {
+            const jitter = to === 'm_actuators' ? 0.0 : to === 'm_locomotion' ? 0.03 : 0.06;
+            return { stage: 'motor_exec', phase: 0.78 + jitter, speed: 1.1 + jitter };
+        }
+
+        // Stage 8: Reward feedback loop (phase 0.85–1.0)
+        if (to === 'reward') return { stage: 'reward_in', phase: 0.85, speed: 0.9 };
+        if (from === 'reward') return { stage: 'reward_out', phase: 0.92, speed: 1.0 };
+
+        // Feedback: principles → goal_formation (closes the loop, phase ~0.96)
+        if (from === 'principles' && to === 'goal_formation') return { stage: 'feedback', phase: 0.96, speed: 0.85 };
+
+        // Default fallback
+        return { stage: 'default', phase: 0.4, speed: 1.0 };
+    }
+
+    isEgoInternal(from, to) {
+        const egoIds = ['self', 'world_model', 'llm', 'goal_formation', 'survival_drives', 'principles'];
+        return egoIds.includes(from) && egoIds.includes(to);
     }
 
     start() {
+        this.pulseTime = performance.now();
         this.spawnParticles();
         this.animate();
     }
@@ -28,36 +87,43 @@ class FlowAnimator {
     spawnParticles() {
         this.clearParticles();
         this.renderer.connectionPaths.forEach(cp => {
-            const count = Math.max(1, cp.data.strength);
+            const count = Math.max(1, Math.ceil(cp.data.strength * 0.8));
             for (let i = 0; i < count; i++) {
-                this.createParticle(cp);
+                this.createParticle(cp, i, count);
             }
         });
     }
 
-    createParticle(connectionPath) {
+    createParticle(connectionPath, particleIndex, totalInGroup) {
         const pathEl = connectionPath.element;
         const totalLength = pathEl.getTotalLength();
         if (totalLength === 0) return;
 
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        const size = 1.5 + connectionPath.data.strength * 0.4;
+        const size = 1.8 + connectionPath.data.strength * 0.5;
         circle.setAttribute('r', size);
         circle.setAttribute('fill', connectionPath.data.color);
-        circle.setAttribute('opacity', '0.8');
+        circle.setAttribute('opacity', '0');
         circle.setAttribute('class', 'flow-particle');
         circle.setAttribute('filter', 'url(#glow)');
         this.particleLayer.appendChild(circle);
+
+        const classification = this.classifyConnection(connectionPath.data);
+        // Slight spread within a group so particles aren't perfectly stacked
+        const groupSpread = totalInGroup > 1 ? (particleIndex / (totalInGroup - 1) - 0.5) * 0.03 : 0;
 
         const particle = {
             element: circle,
             path: pathEl,
             totalLength: totalLength,
-            progress: Math.random(),
-            speed: (0.15 + Math.random() * 0.2) / Math.max(totalLength, 100),
             color: connectionPath.data.color,
             size: size,
             connectionIndex: connectionPath.index,
+            // Pulse-wave properties
+            stage: classification.stage,
+            phaseOffset: classification.phase + groupSpread,
+            speedMult: classification.speed,
+            strength: connectionPath.data.strength,
         };
         this.particles.push(particle);
     }
@@ -67,28 +133,61 @@ class FlowAnimator {
         this.particles = [];
     }
 
-    animate() {
+    animate(now) {
         if (!this.running) return;
+        if (!now) now = performance.now();
+
+        // Global cycle progress (0–1), repeating
+        const cycleProgress = ((now - this.pulseTime) % this.cycleDuration) / this.cycleDuration;
+
         this.particles.forEach(p => {
-            p.progress += p.speed;
-            if (p.progress > 1) p.progress -= 1;
+            // How far into its travel this particle should be
+            // Based on global cycle minus its phase offset
+            let localProgress = (cycleProgress - p.phaseOffset) * p.speedMult;
+
+            // The particle's active window — it travels for ~20% of the cycle
+            const travelWindow = 0.18;
+
+            // Normalize to 0–1 within the travel window
+            // Handle wrap-around for the closed loop
+            if (localProgress < -0.5) localProgress += 1;
+            if (localProgress > 1) localProgress -= 1;
+
+            const t = localProgress / travelWindow;
+
+            if (t < 0 || t > 1) {
+                // Particle is not in its active phase — hide it
+                p.element.setAttribute('opacity', '0');
+                return;
+            }
 
             try {
-                const point = p.path.getPointAtLength(p.progress * p.totalLength);
+                // Smooth easing: ease-in-out for natural pulse feel
+                const eased = t < 0.5
+                    ? 2 * t * t
+                    : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+                const point = p.path.getPointAtLength(eased * p.totalLength);
                 p.element.setAttribute('cx', point.x);
                 p.element.setAttribute('cy', point.y);
-                // Pulse opacity
-                const pulse = 0.4 + 0.6 * Math.sin(p.progress * Math.PI);
-                p.element.setAttribute('opacity', pulse);
+
+                // Pulse opacity: bright in the middle, fade at edges
+                const pulse = Math.sin(t * Math.PI);
+                const opacity = 0.3 + 0.7 * pulse;
+                p.element.setAttribute('opacity', opacity);
+
+                // Pulse size: slightly larger at peak
+                const dynamicSize = p.size * (0.8 + 0.4 * pulse);
+                p.element.setAttribute('r', dynamicSize);
             } catch (e) {
-                // Path may have been removed during rerender
+                p.element.setAttribute('opacity', '0');
             }
         });
-        this.animationId = requestAnimationFrame(() => this.animate());
+
+        this.animationId = requestAnimationFrame((t) => this.animate(t));
     }
 
     refreshPaths() {
-        // Re-sync particles with new paths after rerender
         this.clearParticles();
         if (this.running) this.spawnParticles();
     }

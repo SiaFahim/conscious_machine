@@ -144,15 +144,15 @@ class InteractionManager {
         let animating = false;
         const smoothZoom = () => {
             const diff = targetScale - state.scale;
-            if (Math.abs(diff) < 0.001) { state.scale = targetScale; animating = false; }
-            else { state.scale += diff * 0.15; animating = true; }
+            if (Math.abs(diff) < 0.0005) { state.scale = targetScale; animating = false; }
+            else { state.scale += diff * 0.08; animating = true; }
             this.applyTransform();
             if (animating) requestAnimationFrame(smoothZoom);
         };
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.97 : 1.03;
-            targetScale = Math.max(0.4, Math.min(3, targetScale * delta));
+            const delta = e.deltaY > 0 ? 0.997 : 1.003;
+            targetScale = Math.max(0.5, Math.min(2.5, targetScale * delta));
             if (!animating) { animating = true; smoothZoom(); }
         }, { passive: false });
         container.addEventListener('mousedown', (e) => {

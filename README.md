@@ -200,10 +200,4 @@ These are open research questions, not engineering problems with known solutions
 
 ---
 
-## License
-
-MIT
-
----
-
 *This is a theoretical exploration, not a product roadmap. The goal is to think clearly about what a conscious machine would need to look like — and to make that thinking visible and interactive.*
