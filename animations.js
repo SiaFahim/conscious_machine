@@ -45,18 +45,31 @@ class FlowAnimator {
         // Stage 6: Action planner → Motor decomp (phase 0.70–0.80)
         if (from === 'action_planner' && to === 'motor_decomp') return { stage: 'motor_decomp', phase: 0.70, speed: 1.0 };
 
-        // Stage 7: Motor decomp → Actuators/Locomotion/Speech (phase 0.78–0.90, diverging)
+        // Stage 7: Motor decomp → Actuators/Speech (phase 0.78–0.88, diverging)
         if (from === 'motor_decomp') {
-            const jitter = to === 'm_actuators' ? 0.0 : to === 'm_locomotion' ? 0.03 : 0.06;
+            const jitter = to === 'm_actuators' ? 0.0 : 0.04;
             return { stage: 'motor_exec', phase: 0.78 + jitter, speed: 1.1 + jitter };
         }
 
-        // Stage 8: Reward feedback loop (phase 0.85–1.0)
-        if (to === 'reward') return { stage: 'reward_in', phase: 0.85, speed: 0.9 };
-        if (from === 'reward') return { stage: 'reward_out', phase: 0.92, speed: 1.0 };
+        // Stage 7b: LLM → Speech (direct linguistic output, same phase as motor exec)
+        if (from === 'llm' && to === 'm_speech') return { stage: 'motor_exec', phase: 0.80, speed: 1.0 };
 
-        // Feedback: principles → goal_formation (closes the loop, phase ~0.96)
-        if (from === 'principles' && to === 'goal_formation') return { stage: 'feedback', phase: 0.96, speed: 0.85 };
+        // Stage 8: Reward feedback loop — inputs (phase 0.85–0.90)
+        if (to === 'reward') return { stage: 'reward_in', phase: 0.85, speed: 0.9 };
+
+        // Stage 9: Distributed reward — outputs to all involved models (phase 0.90–0.98)
+        if (from === 'reward') {
+            // Stagger the reward distribution: nearby models get it first, distant ones later
+            const rewardPhases = {
+                'principles': 0.90, 'motor_decomp': 0.91, 'action_planner': 0.92,
+                'motor_reasoning': 0.93, 'world_model': 0.94,
+                'abstraction': 0.95, 'tf_vision': 0.96, 'tf_audio': 0.96, 'tf_somato': 0.96,
+            };
+            return { stage: 'reward_out', phase: rewardPhases[to] || 0.92, speed: 0.9 };
+        }
+
+        // Feedback: principles → goal_formation (closes the loop, phase ~0.98)
+        if (from === 'principles' && to === 'goal_formation') return { stage: 'feedback', phase: 0.98, speed: 0.85 };
 
         // Default fallback
         return { stage: 'default', phase: 0.4, speed: 1.0 };

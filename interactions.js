@@ -7,7 +7,7 @@ class InteractionManager {
         this.selectedId = null;
         this.panel = document.getElementById('detail-panel');
         this.tooltip = null;
-        this.panState = { dragging: false, startX: 0, startY: 0, tx: 0, ty: 0, scale: 1 };
+        this.panState = { dragging: false, startX: 0, startY: 0, tx: 0, ty: 0, scale: 1.3 };
         this.createTooltip();
     }
 
@@ -18,6 +18,8 @@ class InteractionManager {
         this.bindFidelitySlider();
         this.bindFooterButtons();
         this.bindKeyboard();
+        // Apply default zoom on load
+        this.applyTransform();
     }
 
     createTooltip() {
@@ -213,7 +215,7 @@ class InteractionManager {
         document.getElementById('resetView').addEventListener('click', () => {
             this.panState.tx = 0;
             this.panState.ty = 0;
-            this.panState.scale = 1;
+            this.panState.scale = 1.3;
             this.applyTransform();
             this.deselectComponent();
         });

@@ -205,42 +205,33 @@ const COMPONENTS = {
 
     // Motor Execution
     m_actuators: {
-        id: 'm_actuators', label: 'Actuators', sublabel: 'Servo & Tendon Control',
+        id: 'm_actuators', label: 'Actuators', sublabel: 'Servo, Tendon & Locomotion',
         category: 'motor', color: '#ea580c', icon: '⚡', zone: 'execution',
-        x: -480, y: -70, size: 30,
-        description: 'Sends final signals to individual servos, motors, and tendon-like actuators. Pure hardware interface — the lowest level of motor output. Completely outside the ego zone.',
-        models: ['PID Controllers', 'Servo Signal Generator', 'Tendon Force Calculator'],
-        hardware: 'Sub-millisecond latency servo drivers. Analog feedback circuits for force control.',
-        processes: ['Signal', 'Actuate', 'Feedback']
-    },
-    m_locomotion: {
-        id: 'm_locomotion', label: 'Locomotion', sublabel: 'Movement & Balance',
-        category: 'motor', color: '#dc2626', icon: '🦿', zone: 'execution',
-        x: -480, y: 10, size: 30,
-        description: 'Controls whole-body movement — walking, turning, balancing, reaching. Coordinates multiple actuator groups for smooth locomotion while maintaining balance.',
-        models: ['Gait Generator', 'Balance Controller', 'Whole-Body Coordinator'],
-        hardware: 'Real-time balance feedback. Neuromorphic vestibular processing.',
-        processes: ['Move', 'Balance', 'Coordinate']
+        x: -480, y: -30, size: 32,
+        description: 'Sends final signals to individual servos, motors, and tendon-like actuators. Locomotion (walking, turning, balancing) is achieved through the coordinated activation of these actuators via motor decomposition — it is not a separate system but the emergent result of decomposed motor commands driving multiple actuator groups in concert. Pure hardware interface — the lowest level of motor output. Completely outside the ego zone.',
+        models: ['PID Controllers', 'Servo Signal Generator', 'Tendon Force Calculator', 'Gait Pattern Generator', 'Balance Feedback Controller'],
+        hardware: 'Sub-millisecond latency servo drivers. Analog feedback circuits for force control. Real-time balance feedback.',
+        processes: ['Signal', 'Actuate', 'Locomote', 'Balance', 'Feedback']
     },
     m_speech: {
         id: 'm_speech', label: 'Speech Output', sublabel: 'Vocalization',
         category: 'motor', color: '#b91c1c', icon: '🗣', zone: 'execution',
-        x: -480, y: 90, size: 28,
-        description: 'Converts linguistic latent vectors into speech output — vocalization, tone, prosody. The motor output channel for verbal communication.',
-        models: ['Speech Synthesizer', 'Prosody Controller', 'Voice Modulator'],
+        x: -480, y: 60, size: 30,
+        description: 'Converts linguistic latent vectors into speech output — vocalization, tone, prosody. Receives direct input from the Linguistic Model for language-driven speech as well as motor decomposition commands for non-verbal vocalizations and precise articulatory control.',
+        models: ['Speech Synthesizer', 'Prosody Controller', 'Voice Modulator', 'Articulatory Motor Interface'],
         hardware: 'Audio DAC with low-latency speaker drivers.',
-        processes: ['Synthesize', 'Vocalize']
+        processes: ['Synthesize', 'Vocalize', 'Articulate']
     },
 
     // Reward System
     reward: {
-        id: 'reward', label: 'Reward Signal', sublabel: 'Expectation vs Outcome',
+        id: 'reward', label: 'Reward Signal', sublabel: 'Distributed RL Update',
         category: 'feedback', color: '#22c55e', icon: '✓', zone: 'decomposition',
-        x: -360, y: 120, size: 32,
-        description: 'Compares the expectation vector (predicted outcome) with the actual sensory observation after action execution. If outcome matches expectation → positive reward. If outcome exceeds → amplified reward. If falls short → negative reward. Updates Principles via RL, creating a continuous self-improvement loop.',
-        models: ['Expectation Comparator', 'Reward Calculator', 'Surprise Detector', 'RL Update Module'],
-        hardware: 'Low-latency comparison circuits. Dedicated RL accelerator hardware.',
-        processes: ['Compare', 'Calculate Reward', 'Update Principles']
+        x: -360, y: 120, size: 34,
+        description: 'Compares the expectation vector (predicted outcome) with the actual sensory observation after action execution. The reward signal is then DISTRIBUTED to ALL models that were involved in the action, weighted by their degree of involvement. Domain transformers, abstraction, world model, motor reasoning, action planner, motor decomposition, and principles all receive gradient updates proportional to their contribution. This distributed credit assignment enables every stage of the pipeline to learn from outcomes, not just the policy layer.',
+        models: ['Expectation Comparator', 'Reward Calculator', 'Surprise Detector', 'Credit Assignment Network', 'Distributed RL Update Module'],
+        hardware: 'Low-latency comparison circuits. Dedicated RL accelerator hardware. Broadcast bus for parallel gradient distribution.',
+        processes: ['Compare', 'Calculate Reward', 'Assign Credit', 'Distribute Updates']
     },
 };
 
@@ -280,14 +271,26 @@ const CONNECTIONS = [
     // Motor pipeline
     { from: 'motor_reasoning', to: 'action_planner', label: 'Reasoned Goal', color: '#ff8c00', strength: 3 },
     { from: 'action_planner', to: 'motor_decomp', label: 'Action Plan', color: '#fb923c', strength: 3 },
-    { from: 'motor_decomp', to: 'm_actuators', label: 'Servo Commands', color: '#f97316', strength: 2 },
-    { from: 'motor_decomp', to: 'm_locomotion', label: 'Gait Commands', color: '#f97316', strength: 2 },
-    { from: 'motor_decomp', to: 'm_speech', label: 'Speech Commands', color: '#f97316', strength: 1 },
+    { from: 'motor_decomp', to: 'm_actuators', label: 'Actuator Commands', color: '#f97316', strength: 3 },
+    { from: 'motor_decomp', to: 'm_speech', label: 'Vocal Motor Cmds', color: '#f97316', strength: 1 },
 
-    // Reward feedback loop
+    // Linguistic model → Speech (direct connection for language-driven speech)
+    { from: 'llm', to: 'm_speech', label: 'Linguistic Output', color: '#fbbf24', strength: 2 },
+
+    // Reward feedback loop — inputs
     { from: 'action_planner', to: 'reward', label: 'Expectation Vec', color: '#fb923c', strength: 2 },
     { from: 'world_model', to: 'reward', label: 'Actual Outcome', color: '#4ade80', strength: 2 },
+
+    // Distributed reward signal — updates ALL involved models based on contribution
     { from: 'reward', to: 'principles', label: 'RL Update', color: '#22c55e', strength: 3 },
+    { from: 'reward', to: 'motor_decomp', label: 'Motor RL', color: '#22c55e', strength: 2 },
+    { from: 'reward', to: 'action_planner', label: 'Planner RL', color: '#22c55e', strength: 2 },
+    { from: 'reward', to: 'motor_reasoning', label: 'Reasoning RL', color: '#22c55e', strength: 2 },
+    { from: 'reward', to: 'world_model', label: 'World Model RL', color: '#22c55e', strength: 1 },
+    { from: 'reward', to: 'abstraction', label: 'Abstraction RL', color: '#22c55e', strength: 1 },
+    { from: 'reward', to: 'tf_vision', label: 'Vision RL', color: '#22c55e', strength: 1 },
+    { from: 'reward', to: 'tf_audio', label: 'Audio RL', color: '#22c55e', strength: 1 },
+    { from: 'reward', to: 'tf_somato', label: 'Somato RL', color: '#22c55e', strength: 1 },
 
     // Principles feedback to Goal Formation
     { from: 'principles', to: 'goal_formation', label: 'Value Constraints', color: '#f472b6', strength: 1 },
